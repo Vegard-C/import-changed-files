@@ -35,7 +35,7 @@ class FileMemory(val file: File) : Memory {
         return new
     }
 
-    override fun close() {
+    override fun store() {
         if (newLines.isNotEmpty()) {
             file.appendText(newLines.sorted().joinToString(System.lineSeparator(), postfix = System.lineSeparator()))
         }
@@ -63,7 +63,7 @@ interface Memory {
      *  if it was not known
      */
     fun add(f: File): Boolean
-    fun close()
+    fun store()
 }
 
 @Component

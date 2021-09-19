@@ -29,6 +29,7 @@ dependencies {
   implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
   implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
   implementation("org.springframework.boot:spring-boot-starter")
+  implementation("com.drewnoakes:metadata-extractor:2.16.0")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
