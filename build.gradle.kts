@@ -19,7 +19,11 @@ plugins {
 group = "com." + project.name
 version = "0.0.1"
 
-java.sourceCompatibility = JavaVersion.VERSION_11
+java.sourceCompatibility = JavaVersion.VERSION_16
+val compileKotlin: org.jetbrains.kotlin.gradle.tasks.KotlinCompile by tasks
+compileKotlin.kotlinOptions.jvmTarget="16"
+val compileTestKotlin: org.jetbrains.kotlin.gradle.tasks.KotlinCompile by tasks
+compileTestKotlin.kotlinOptions.jvmTarget="16"
 
 repositories {
   mavenCentral()
