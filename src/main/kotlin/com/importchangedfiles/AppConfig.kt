@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import java.io.File
+import java.security.MessageDigest
+import java.util.*
 
 @Configuration
 class AppConfig {
@@ -21,6 +23,7 @@ class AppConfig {
 }
 
 class FileMemory(val file: File) : Memory {
+    private val bufferSize = 1024 * 8
     val knownSet = mutableSetOf<String>()
     val newLines = mutableListOf<String>()
     init {
@@ -43,11 +46,23 @@ class FileMemory(val file: File) : Memory {
 
     private fun key(f: File): String {
         val name = f.name
-        val modified = f.lastModified()
+        val sha = sha(f)
         val length = f.length()
-        return "$name | $modified | $length"
+        return "$name | $sha | $length"
     }
 
+    private fun sha(f: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        f.inputStream().use { input ->
+            val buffer = ByteArray(bufferSize)
+            var bytes = input.read(buffer)
+            while (bytes >= 0) {
+                digest.update(buffer, 0, bytes)
+                bytes = input.read(buffer)
+            }
+        }
+        return HexFormat.of().formatHex(digest.digest())
+    }
 }
 
 fun interface ImportSources {

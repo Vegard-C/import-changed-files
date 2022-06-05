@@ -2,16 +2,24 @@ package com.importchangedfiles
 
 import com.drew.imaging.ImageMetadataReader
 import com.drew.metadata.exif.ExifSubIFDDirectory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.*
 
 
 @Service
-class Service(private val sources: ImportSources, private val destination: Destination, private val memory: Memory) {
+class Service(
+    private val sources: ImportSources,
+    private val destination: Destination,
+    private val memory: Memory,
+    @Value("\${importchangedfiles.maxagedays:14}") private val maxAgeDays: Long,
+    ) {
     private val zoneId = ZoneId.of("Europe/Berlin")
     private val timeZone = TimeZone.getTimeZone(zoneId)
 
@@ -19,22 +27,25 @@ class Service(private val sources: ImportSources, private val destination: Desti
         val now = LocalDateTime.now()
         val formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
         var count = 0
+        val oldestImport = LocalDateTime.ofInstant(Instant.now().minus(maxAgeDays, ChronoUnit.DAYS), zoneId)
         sources.sources().forEach { importDir ->
             println("Importing from $importDir")
             importDir.listFiles()?.forEach { file ->
-                val new = memory.add(file)
-                if (new) {
-                    val createDate = file.createDate()
-                    println("Copying ${file.name} with CreateDate $createDate")
+                val createDate = file.createDate()
+                if (createDate.isAfter(oldestImport)) {
+                    val new = memory.add(file)
+                    if (new) {
+                        println("Copying ${file.name} with CreateDate $createDate")
 
-                    val year = "${now.year}"
-                    val importTimestamp = now.format(formatter)
-                    val fileTimestamp = createDate.format(formatter)
+                        val year = "${now.year}"
+                        val importTimestamp = now.format(formatter)
+                        val fileTimestamp = createDate.format(formatter)
 
-                    val destFile =
-                        File(File(File(destination.dir(), year), importTimestamp), "${fileTimestamp}_${file.name}")
-                    file.copyTo(destFile)
-                    count++
+                        val destFile =
+                            File(File(File(destination.dir(), year), importTimestamp), "${fileTimestamp}_${file.name}")
+                        file.copyTo(destFile)
+                        count++
+                    }
                 }
             }
         }
